@@ -3,29 +3,30 @@
 body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
 #map { z-index: 0; }
 
-/* NAVBAR SCROLL BEHAVIOR */
+/* ---------- NAVBAR SCROLL ---------- */
 #main-navbar {
     position: fixed;
-    left: 0; right: 0;
-    top: 0;
+    left: 0; right: 0; top: 0;
     z-index: 40;
     transition: transform 0.3s ease;
     transform: translateY(0);
 }
+#main-navbar.scroll-down { transform: translateY(-100%); }
+#main-navbar.scroll-up   { transform: translateY(0); }
 
-#main-navbar.scroll-down {
-    transform: translateY(-100%);
+/* ---------- HIDE FEATURES ---------- */
+#nav-features.hidden { display: none !important; }
+
+/* ---------- BUTTONS ---------- */
+.nav-btn {
+    @apply text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg;
+}
+.nav-btn.active {
+    @apply bg-blue-600 text-white;
 }
 
-#main-navbar.scroll-up {
-    transform: translateY(0);
-}
+/* ---------- CUSTOM MARKER ICON ---------- */
+.custom-icon { background:transparent; border:none; }
 
-/* HIDE ONLY FEATURES */
-#nav-features.hidden {
-    display: none !important;
-}
-
-/* BUTTONS */
-.nav-btn { @apply text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg; }
-.nav-btn.active { @apply bg-blue-600 text-white; }
+/* ---------- TOAST (optional) ---------- */
+.fixed.bottom-4.right-4 { z-index:1000; }
