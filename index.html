@@ -4,229 +4,398 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flood Rescue - Ho Chi Minh City Flood Monitoring</title>
-    <link rel="stylesheet" href="style.css">
+
+    <!-- Tailwind (via CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Feather icons -->
     <script src="https://unpkg.com/feather-icons"></script>
-    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
+    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+    <!-- Custom legend (web component) -->
     <script src="components/flood-legend.js"></script>
+
+    <!-- Your CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gray-50">
 
-    <!-- TITLE PAGE -->
-    <section id="title-page" class="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white overflow-hidden">
-        <div class="absolute inset-0 opacity-20">
-            <svg class="w-full h-full" viewBox="0 0 1440 560" preserveAspectRatio="none">
-                <path fill="#fff" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,560L1392,560C1344,560,1248,560,1152,560C1056,560,960,560,864,560C768,560,672,560,576,560C480,560,384,560,288,560C192,560,96,560,48,560L0,560Z"></path>
-            </svg>
-        </div>
+<!-- ==================== TITLE PAGE ==================== -->
+<section id="title-page" class="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white overflow-hidden">
+    <div class="absolute inset-0 opacity-20">
+        <svg class="w-full h-full" viewBox="0 0 1440 560" preserveAspectRatio="none">
+            <path fill="#fff" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,560L1392,560C1344,560,1248,560,1152,560C1056,560,960,560,864,560C768,560,672,560,576,560C480,560,384,560,288,560C192,560,96,560,48,560L0,560Z"></path>
+        </svg>
+    </div>
 
-        <!-- HCMUT LOGO TOP LEFT -->
-        <div class="absolute top-6 left-6 z-20 transition-transform hover:scale-110">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/d/de/HCMUT_official_logo.png" alt="HCMUT Logo" class="w-16 h-16 object-contain drop-shadow-lg">
-        </div>
+    <!-- HCMUT LOGO (top-left) -->
+    <div class="absolute top-6 left-6 z-20 transition-transform hover:scale-110">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/d/de/HCMUT_official_logo.png"
+             alt="HCMUT Logo" class="w-16 h-16 object-contain drop-shadow-lg">
+    </div>
 
-        <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">
-            <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-                Flood <span class="text-yellow-300">Rescue</span>
-            </h1>
-            <p class="text-lg md:text-xl mb-10 opacity-90">
-                Real-time flood monitoring & emergency response system for Ho Chi Minh City.
-            </p>
-            <button id="enter-dashboard" class="inline-flex items-center bg-white text-blue-700 font-semibold px-8 py-4 rounded-full shadow-lg hover:bg-gray-100 transition-all transform hover:scale-105">
-                <i data-feather="arrow-down-circle" class="w-6 h-6 mr-2"></i>
-                Enter Dashboard
+    <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">
+        <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            Flood <span class="text-yellow-300">Rescue</span>
+        </h1>
+        <p class="text-lg md:text-xl mb-10 opacity-90">
+            Real-time flood monitoring & emergency response system for Ho Chi Minh City.
+        </p>
+        <button id="enter-dashboard"
+                class="inline-flex items-center bg-white text-blue-700 font-semibold px-8 py-4 rounded-full shadow-lg hover:bg-gray-100 transition-all transform hover:scale-105">
+            <i data-feather="arrow-down-circle" class="w-6 h-6 mr-2"></i>
+            Enter Dashboard
+        </button>
+    </div>
+
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <i data-feather="chevron-down" class="w-8 h-8"></i>
+    </div>
+</section>
+
+<!-- ==================== NAVBAR (scroll-hide) ==================== -->
+<nav id="main-navbar"
+     class="bg-white shadow-lg fixed left-0 right-0 top-0 z-40 transition-transform duration-300 transform translate-y-0">
+    <div class="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+
+        <!-- LEFT: LOGO + TITLE (back to title) -->
+        <button id="back-to-title" class="flex items-center space-x-2 hover:scale-105 transition-transform">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/d/de/HCMUT_official_logo.png"
+                 alt="HCMUT Logo" class="w-12 h-12">
+            <span class="text-xl font-bold text-gray-800">Flood Rescue</span>
+        </button>
+
+        <!-- CENTER: FEATURE BUTTONS (hide/show) -->
+        <div id="nav-features" class="flex flex-wrap gap-2 md:gap-4">
+            <button onclick="scrollToSection('map-section')"
+                    class="nav-btn px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
+                <i data-feather="map" class="w-5 h-5"></i><span>Live Map</span>
+            </button>
+            <button onclick="scrollToSection('alerts-section')"
+                    class="nav-btn px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
+                <i data-feather="alert-triangle" class="w-5 h-5"></i><span>Alerts</span>
+            </button>
+            <button onclick="scrollToSection('stations-section')"
+                    class="nav-btn px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
+                <i data-feather="droplet" class="w-5 h-5"></i><span>Stations</span>
+            </button>
+            <button onclick="showStatistics()"
+                    class="nav-btn px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
+                <i data-feather="bar-chart-2" class="w-5 h-5"></i><span>Forecast</span>
+            </button>
+            <button onclick="showEmergencyContacts()"
+                    class="nav-btn px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
+                <i data-feather="phone" class="w-5 h-5"></i><span>Resources</span>
             </button>
         </div>
 
-        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <i data-feather="chevron-down" class="w-8 h-8"></i>
+        <!-- RIGHT: HIDE/SHOW + ADMIN -->
+        <div class="flex items-center space-x-2">
+            <button id="toggle-features"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
+                <i data-feather="chevron-up" class="w-5 h-5"></i><span>Hide</span>
+            </button>
+            <button id="admin-toggle"
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 transition-all">
+                <i data-feather="settings" class="w-5 h-5"></i><span>Admin</span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- ==================== ADMIN PANEL ==================== -->
+<div id="admin-panel"
+     class="fixed top-20 right-4 w-80 bg-white rounded-xl shadow-2xl z-50 hidden transition-all">
+    <div class="bg-purple-600 text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
+        <h3 class="font-bold flex items-center">
+            <i data-feather="map-pin" class="w-5 h-5 mr-2"></i>Add Flood System
+        </h3>
+        <button id="close-admin" class="hover:bg-purple-700 rounded p-1">
+            <i data-feather="x" class="w-5 h-5"></i>
+        </button>
+    </div>
+    <div class="p-4 space-y-4">
+        <select id="system-type" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            <option value="station">Water Level Station</option>
+            <option value="pump">Pump Station</option>
+            <option value="gate">Flood Gate</option>
+            <option value="sensor">Water Level Sensor</option>
+        </select>
+
+        <input type="text" id="system-name" placeholder="System name (required)"
+               class="w-full border border-gray-300 rounded-lg px-3 py-2">
+
+        <input type="number" id="system-capacity" placeholder="Capacity (m³/h)"
+               class="w-full border border-gray-300 rounded-lg px-3 py-2">
+
+        <select id="system-status" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            <option value="active">Active</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="inactive">Inactive</option>
+        </select>
+
+        <input type="number" id="water-level" step="0.1" placeholder="Water level (m)"
+               class="w-full border border-gray-300 rounded-lg px-3 py-2">
+
+        <div id="placement-mode"
+             class="hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p class="text-sm text-blue-700">
+                <i data-feather="info" class="w-4 h-4 inline mr-1"></i>
+                Click the map to place the system
+            </p>
+        </div>
+
+        <button id="place-system"
+                class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 rounded-lg">
+            Place on Map
+        </button>
+        <button id="cancel-placement"
+                class="w-full hidden bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 rounded-lg">
+            Cancel
+        </button>
+    </div>
+</div>
+
+<!-- ==================== MAIN CONTENT ==================== -->
+<main class="container mx-auto px-4 py-6 pt-24">
+
+    <!-- MAP SECTION -->
+    <section id="map-section" class="mb-8">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold flex items-center">
+                    <i data-feather="map" class="w-6 h-6 mr-2 text-blue-600"></i>Live Flood Map
+                </h2>
+                <button onclick="refreshMap()"
+                        class="text-blue-600 hover:text-blue-800 flex items-center space-x-1">
+                    <i data-feather="refresh-cw" class="w-5 h-5"></i><span>Refresh</span>
+                </button>
+            </div>
+            <div id="map" class="h-[70vh] w-full"></div>
+            <div class="p-4 bg-gray-50 border-t">
+                <custom-flood-legend></custom-flood-legend>
+            </div>
         </div>
     </section>
 
-    <!-- NAVBAR -->
-    <nav id="main-navbar" class="bg-white shadow-lg fixed left-0 right-0 top-0 z-40 transition-transform duration-300 transform translate-y-0">
-        <div class="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
-            <!-- LEFT: OFFICIAL HCMUT LOGO (CLICK TO GO BACK) -->
-            <button id="back-to-title" class="flex items-center space-x-2 hover:scale-105 transition-transform">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/d/de/HCMUT_official_logo.png" alt="BK TP.HCM Logo" class="w-12 h-12">
-                <span class="text-xl font-bold text-gray-800">Flood Rescue</span>
-            </button>
-
-            <!-- CENTER: FEATURE BUTTONS -->
-            <div id="nav-features" class="flex flex-wrap gap-2 md:gap-4">
-                <button onclick="scrollToSection('map-section')" class="nav-btn px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
-                    <i data-feather="map" class="w-5 h-5"></i><span>Live Map</span>
-                </button>
-                <button onclick="scrollToSection('alerts-section')" class="nav-btn px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
-                    <i data-feather="alert-triangle" class="w-5 h-5"></i><span>Alerts</span>
-                </button>
-                <button onclick="scrollToSection('stations-section')" class="nav-btn px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
-                    <i data-feather="droplet" class="w-5 h-5"></i><span>Stations</span>
-                </button>
-                <button onclick="showStatistics()" class="nav-btn px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
-                    <i data-feather="bar-chart-2" class="w-5 h-5"></i><span>Forecast</span>
-                </button>
-                <button onclick="showEmergencyContacts()" class="nav-btn px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
-                    <i data-feather="phone" class="w-5 h-5"></i><span>Resources</span>
-                </button>
-            </div>
-
-            <!-- RIGHT: HIDE/SHOW + ADMIN -->
-            <div class="flex items-center space-x-2">
-                <button id="toggle-features" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1">
-                    <i data-feather="chevron-up" class="w-5 h-5"></i><span>Hide</span>
-                </button>
-                <button id="admin-toggle" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 transition-all">
-                    <i data-feather="settings" class="w-5 h-5"></i><span>Admin</span>
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <!-- ADMIN PANEL -->
-    <div id="admin-panel" class="fixed top-20 right-4 w-80 bg-white rounded-xl shadow-2xl z-50 hidden">
-        <div class="bg-purple-600 text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
-            <h3 class="font-bold flex items-center">
-                <i data-feather="map-pin" class="w-5 h-5 mr-2"></i>
-                Add Flood System
-            </h3>
-            <button id="close-admin" class="hover:bg-purple-700 rounded p-1">
-                <i data-feather="x" class="w-5 h-5"></i>
-            </button>
-        </div>
-        <div class="p-4 space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">System Type</label>
-                <select id="system-type" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500">
-                    <option value="station">Water Level Station</option>
-                    <option value="pump">Pump Station</option>
-                    <option value="gate">Flood Gate</option>
-                    <option value="sensor">Water Level Sensor</option>
-                    <option value="control">Control System</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">System Name</label>
-                <input type="text" id="system-name" placeholder="e.g., District 1 Main Pump" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Capacity (m³/h)</label>
-                <input type="number" id="system-capacity" placeholder="e.g., 1200" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select id="system-status" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                    <option value="active">Active</option>
-                    <option value="maintenance">Under Maintenance</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Water Level (m)</label>
-                <input type="number" id="water-level" step="0.1" placeholder="e.g., 1.5" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-            </div>
-            <div id="placement-mode" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p class="text-sm text-blue-700"><i data-feather="info" class="w-4 h-4 inline mr-1"></i> Click on the map to place the system</p>
-            </div>
-            <button id="place-system" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 rounded-lg">Place on Map</button>
-            <button id="cancel-placement" class="w-full hidden bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 rounded-lg">Cancel Placement</button>
-        </div>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <main class="container mx-auto px-4 py-6 pt-24">
-        <section id="map-section" class="mb-8">
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
-                    <h2 class="text-xl font-bold flex items-center"><i data-feather="map" class="w-6 h-6 mr-2 text-blue-600"></i> Live Flood Map</h2>
-                    <button onclick="refreshMap()" class="text-blue-600 hover:text-blue-800 flex items-center space-x-1">
-                        <i data-feather="refresh-cw" class="w-5 h-5"></i><span>Refresh</span>
-                    </button>
+    <!-- ALERTS SECTION -->
+    <section id="alerts-section" class="mb-8">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-red-500 text-white px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center">
+                    <i data-feather="alert-triangle" class="mr-2"></i>
+                    <h2 class="text-xl font-bold">Active Flood Alerts</h2>
                 </div>
-                <div id="map" class="h-[70vh] w-full"></div>
-                <div class="p-4 bg-gray-50 border-t"><custom-flood-legend></custom-flood-legend></div>
+                <button onclick="refreshAlerts()"
+                        class="hover:bg-red-600 rounded p-1 transition-colors">
+                    <i data-feather="refresh-cw" class="w-5 h-5"></i>
+                </button>
             </div>
-        </section>
+            <div id="alerts-container" class="p-4 space-y-3 max-h-96 overflow-y-auto"></div>
+        </div>
+    </section>
 
-        <!-- ALERTS, STATIONS, QUICK ACTIONS (unchanged) -->
-        <!-- ... your existing sections ... -->
-    </main>
+    <!-- STATIONS SECTION -->
+    <section id="stations-section" class="mb-8">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-blue-500 text-white px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center">
+                    <i data-feather="droplet" class="mr-2"></i>
+                    <h2 class="text-xl font-bold">Water Level Stations</h2>
+                </div>
+                <button onclick="refreshStations()"
+                        class="hover:bg-blue-600 rounded p-1 transition-colors">
+                    <i data-feather="refresh-cw" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="stations-container" class="p-4 space-y-4 max-h-96 overflow-y-auto"></div>
+        </div>
+    </section>
 
-    <!-- SCRIPTS -->
-    <script>
-        // ENTER DASHBOARD
-        document.getElementById('enter-dashboard').addEventListener('click', () => {
-            document.getElementById('title-page').style.display = 'none';
-            document.getElementById('main-navbar').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+    <!-- QUICK ACTIONS -->
+    <section class="mb-8">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-purple-500 text-white px-4 py-3">
+                <h2 class="text-xl font-bold flex items-center">
+                    <i data-feather="zap" class="mr-2"></i>Quick Actions
+                </h2>
+            </div>
+            <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button onclick="showStatistics()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2">
+                    <i data-feather="bar-chart-2" class="w-5 h-5"></i><span>View Statistics</span>
+                </button>
+                <button onclick="exportReport()"
+                        class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2">
+                    <i data-feather="download" class="w-5 h-5"></i><span>Export Report</span>
+                </button>
+                <button onclick="showEmergencyContacts()"
+                        class="bg-red-600 hover:bg-red-700 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2">
+                    <i data-feather="phone" class="w-5 h-5"></i><span>Emergency Contacts</span>
+                </button>
+            </div>
+        </div>
+    </section>
 
-        // BACK TO TITLE
-        document.getElementById('back-to-title').addEventListener('click', () => {
-            document.getElementById('title-page').style.display = 'flex';
-            document.getElementById('main-navbar').classList.add('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+</main>
 
-        // TOGGLE FEATURES
-        document.getElementById('toggle-features').addEventListener('click', () => {
-            const features = document.getElementById('nav-features');
-            const btn = document.getElementById('toggle-features');
-            const icon = btn.querySelector('i');
-            const text = btn.querySelector('span');
-            if (features.classList.contains('hidden')) {
-                features.classList.remove('hidden');
-                icon.setAttribute('data-feather', 'chevron-up');
-                text.textContent = 'Hide';
-            } else {
-                features.classList.add('hidden');
-                icon.setAttribute('data-feather', 'chevron-down');
-                text.textContent = 'Show';
-            }
-            feather.replace();
-        });
+<!-- ==================== SCRIPTS ==================== -->
+<script>
+/* ---------- ADMIN + MAP PLACEMENT ---------- */
+let map, isPlacementMode = false;
 
-        // SCROLL HIDE/SHOW NAVBAR
-        let lastScroll = 0;
-        window.addEventListener('scroll', () => {
-            const navbar = document.getElementById('main-navbar');
-            const currentScroll = window.pageYOffset;
+document.addEventListener('DOMContentLoaded', () => {
+    /* ---- MAP ---- */
+    map = L.map('map').setView([10.7769, 106.7009], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
-            if (currentScroll <= 0) {
-                navbar.classList.remove('scroll-down');
-                return;
-            }
+    /* hide navbar on title page */
+    document.getElementById('main-navbar').classList.add('hidden');
 
-            if (currentScroll > lastScroll && !navbar.classList.contains('scroll-down')) {
-                navbar.classList.remove('scroll-up');
-                navbar.classList.add('scroll-down');
-            } else if (currentScroll < lastScroll && navbar.classList.contains('scroll-down')) {
-                navbar.classList.remove('scroll-down');
-                navbar.classList.add('scroll-up');
-            }
-            lastScroll = currentScroll;
-        });
+    /* ---- ADMIN TOGGLE ---- */
+    document.getElementById('admin-toggle').addEventListener('click', () => {
+        document.getElementById('admin-panel').classList.toggle('hidden');
+    });
+    document.getElementById('close-admin').addEventListener('click', () => {
+        document.getElementById('admin-panel').classList.add('hidden');
+        resetPlacement();
+    });
 
-        // SMOOTH SCROLL
-        function scrollToSection(id) {
-            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    /* ---- PLACE BUTTON ---- */
+    document.getElementById('place-system').addEventListener('click', () => {
+        const name = document.getElementById('system-name').value.trim();
+        if (!name) { alert('System name is required'); return; }
+        isPlacementMode = true;
+        document.getElementById('placement-mode').classList.remove('hidden');
+        document.getElementById('place-system').classList.add('hidden');
+        document.getElementById('cancel-placement').classList.remove('hidden');
+    });
+
+    /* ---- CANCEL ---- */
+    document.getElementById('cancel-placement').addEventListener('click', resetPlacement);
+
+    function resetPlacement() {
+        isPlacementMode = false;
+        document.getElementById('placement-mode').classList.add('hidden');
+        document.getElementById('place-system').classList.remove('hidden');
+        document.getElementById('cancel-placement').classList.add('hidden');
+        document.getElementById('system-name').value = '';
+        document.getElementById('system-capacity').value = '';
+        document.getElementById('water-level').value = '';
+    }
+
+    /* ---- MAP CLICK → MARKER ---- */
+    map.on('click', e => {
+        if (!isPlacementMode) return;
+
+        const name   = document.getElementById('system-name').value;
+        const type   = document.getElementById('system-type').value;
+        const cap    = document.getElementById('system-capacity').value;
+        const status = document.getElementById('system-status').value;
+        const level  = document.getElementById('water-level').value;
+
+        const color = status === 'active' ? '#3b82f6' :
+                     status === 'maintenance' ? '#f59e0b' : '#6b7280';
+
+        let iconSvg = '';
+        switch (type) {
+            case 'station':
+                iconSvg = `<svg viewBox="0 0 24 24" fill="${color}"><circle cx="12" cy="12" r="10"/><text x="12" y="16" font-size="10" text-anchor="middle" fill="white">${level||''}</text></svg>`;
+                break;
+            case 'pump':
+                iconSvg = `<svg viewBox="0 0 24 24" fill="${color}"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/></svg>`;
+                break;
+            case 'gate':
+                iconSvg = `<svg viewBox="0 0 24 24" fill="${color}"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h10v10H7z" fill="white"/></svg>`;
+                break;
+            case 'sensor':
+                iconSvg = `<svg viewBox="0 0 24 24" fill="${color}"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="white"/></svg>`;
+                break;
         }
 
-        // MAP INIT
-        let map;
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('main-navbar').classList.add('hidden');
-            map = L.map('map').setView([10.7769, 106.7009], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            feather.replace();
-        });
+        const icon = L.divIcon({ html: iconSvg, className: 'custom-icon', iconSize: [30,30] });
 
-        function refreshMap() {
-            if (map) map.setView([10.7769, 106.7009], 12);
+        L.marker([e.latlng.lat, e.latlng.lng], { icon })
+            .addTo(map)
+            .bindPopup(`
+                <b>${name}</b><br>
+                Type: ${type}<br>
+                ${cap ? `Capacity: ${cap} m³/h<br>` : ''}
+                ${level ? `Level: ${level}m<br>` : ''}
+                Status: <span style="color:${color}">${status}</span>
+            `)
+            .openPopup();
+
+        resetPlacement();
+        showToast(`${name} added!`);
+    });
+
+    function showToast(msg) {
+        const t = document.createElement('div');
+        t.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center z-50';
+        t.innerHTML = `<i data-feather="check-circle" class="w-5 h-5 mr-2"></i><span>${msg}</span>`;
+        document.body.appendChild(t);
+        feather.replace();
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    /* ---- ENTER / BACK TO TITLE ---- */
+    document.getElementById('enter-dashboard').addEventListener('click', () => {
+        document.getElementById('title-page').style.display = 'none';
+        document.getElementById('main-navbar').classList.remove('hidden');
+    });
+    document.getElementById('back-to-title').addEventListener('click', () => {
+        document.getElementById('title-page').style.display = 'flex';
+        document.getElementById('main-navbar').classList.add('hidden');
+        window.scrollTo(0,0);
+    });
+
+    /* ---- HIDE/SHOW FEATURES ---- */
+    document.getElementById('toggle-features').addEventListener('click', () => {
+        const f = document.getElementById('nav-features');
+        const b = document.getElementById('toggle-features');
+        const i = b.querySelector('i');
+        const s = b.querySelector('span');
+        if (f.classList.contains('hidden')) {
+            f.classList.remove('hidden');
+            i.setAttribute('data-feather','chevron-up');
+            s.textContent = 'Hide';
+        } else {
+            f.classList.add('hidden');
+            i.setAttribute('data-feather','chevron-down');
+            s.textContent = 'Show';
         }
-    </script>
-    <script src="script.js"></script>
+        feather.replace();
+    });
+
+    /* ---- SCROLL-HIDE NAVBAR ---- */
+    let last = 0;
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('main-navbar');
+        const cur = window.pageYOffset;
+        if (cur <= 0) { nav.classList.remove('scroll-down'); return; }
+        if (cur > last && !nav.classList.contains('scroll-down')) {
+            nav.classList.remove('scroll-up'); nav.classList.add('scroll-down');
+        } else if (cur < last && nav.classList.contains('scroll-down')) {
+            nav.classList.remove('scroll-down'); nav.classList.add('scroll-up');
+        }
+        last = cur;
+    });
+
+    /* ---- SMOOTH SCROLL ---- */
+    window.scrollToSection = id => document.getElementById(id).scrollIntoView({behavior:'smooth'});
+
+    /* init icons */
+    feather.replace();
+});
+
+/* ---------- OPTIONAL: your original script.js (alerts, stations, etc.) ---------- */
+</script>
+<script src="script.js"></script>
 </body>
 </html>
